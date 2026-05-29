@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#0d0f1a; color:#e2e8f0; font-family:'Segoe UI',sans-serif; padding:28px 20px; }
+  h1 { text-align:center; font-size:.9rem; letter-spacing:2px; text-transform:uppercase; color:#7c3aed; margin-bottom:6px; }
+  .subtitle { text-align:center; font-size:.72rem; color:#6b7280; margin-bottom:28px; }
+
+  .flow { display:flex; flex-direction:column; align-items:center; max-width:800px; margin:0 auto; }
+
+  .node { width:100%; border-radius:12px; padding:13px 18px; border:1.5px solid; transition:transform .2s,box-shadow .2s; }
+  .node:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,.45); }
+  .nt { font-weight:700; font-size:.88rem; display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+  .ns { font-size:.73rem; opacity:.72; line-height:1.5; }
+  .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+  .tag { font-size:.63rem; padding:2px 8px; border-radius:20px; font-weight:600; }
+
+  .blue   { background:#0c1e35; border-color:#2563eb44; } .blue   .nt{color:#60a5fa;} .blue   .tag{background:#1d4ed818;color:#93c5fd;border:1px solid #2563eb33;}
+  .purple { background:#150d2e; border-color:#7c3aed44; } .purple .nt{color:#a78bfa;} .purple .tag{background:#6d28d918;color:#c4b5fd;border:1px solid #7c3aed33;}
+  .green  { background:#0a1f15; border-color:#16a34a44; } .green  .nt{color:#4ade80;} .green  .tag{background:#15803d18;color:#86efac;border:1px solid #16a34a33;}
+  .orange { background:#1f1208; border-color:#ea580c44; } .orange .nt{color:#fb923c;} .orange .tag{background:#c2410c18;color:#fdba74;border:1px solid #ea580c33;}
+  .teal   { background:#0a1e1e; border-color:#0d948844; } .teal   .nt{color:#2dd4bf;} .teal   .tag{background:#0f766e18;color:#5eead4;border:1px solid #0d948833;}
+  .red    { background:#1f0a0a; border-color:#dc262644; } .red    .nt{color:#f87171;} .red    .tag{background:#b91c1c18;color:#fca5a5;border:1px solid #dc262633;}
+  .yellow { background:#1a1500; border-color:#ca8a0444; } .yellow .nt{color:#fbbf24;} .yellow .tag{background:#92400e18;color:#fde68a;border:1px solid #ca8a0433;}
+
+  .channels { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; width:100%; margin-bottom:4px; }
+  .ch { border-radius:9px; padding:10px 5px; text-align:center; border:1.5px solid; transition:transform .2s; cursor:default; display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .ch:hover { transform:translateY(-2px); }
+  .ch img { width:28px; height:28px; object-fit:contain; }
+  .ch .lbl { font-size:.6rem; font-weight:600; opacity:.85; }
+
+  .ch-jira    { background:#0c1e35; border-color:#2563eb44; color:#60a5fa; }
+  .ch-devops  { background:#150d2e; border-color:#7c3aed44; color:#a78bfa; }
+  .ch-desk    { background:#0a1e1e; border-color:#0d948844; color:#2dd4bf; }
+  .ch-github  { background:#111827; border-color:#6b728044; color:#9ca3af; }
+  .ch-slack   { background:#1a1000; border-color:#d9770644; color:#fbbf24; }
+  .ch-teams   { background:#0c1535; border-color:#3b82f644; color:#93c5fd; }
+  .ch-wa      { background:#0a1f10; border-color:#22c55e44; color:#4ade80; }
+  .ch-tg      { background:#0a1829; border-color:#38bdf844; color:#7dd3fc; }
+  .ch-gmail   { background:#1f0a0a; border-color:#dc262644; color:#f87171; }
+  .ch-outlook { background:#0c1535; border-color:#2563eb44; color:#93c5fd; }
+
+  .arrow { display:flex; flex-direction:column; align-items:center; margin:2px 0; position:relative; }
+  .aline { width:2px; height:26px; background:linear-gradient(to bottom,#374151,#6b7280); }
+  .ahead { width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #6b7280; }
+  .alabel { position:absolute; left:calc(50% + 12px); top:50%; transform:translateY(-50%); font-size:.63rem; color:#9ca3af; white-space:nowrap; background:#0d0f1a; padding:2px 6px; border-radius:4px; border:1px solid #1f2937; }
+
+  .fork { width:100%; display:flex; gap:14px; align-items:flex-start; margin:4px 0; }
+  .fb { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .flabel { font-size:.68rem; font-weight:700; padding:3px 12px; border-radius:20px; margin:4px 0 5px; }
+  .fyes { background:#14532d; color:#4ade80; }
+  .fno  { background:#450a0a; color:#f87171; }
+
+  .sources { display:flex; gap:12px; width:100%; margin:4px 0; }
+  .src { flex:1; }
+
+  .legend { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:24px; padding-top:16px; border-top:1px solid #1f2937; }
+  .li { display:flex; align-items:center; gap:6px; font-size:.68rem; color:#9ca3af; }
+  .dot { width:9px; height:9px; border-radius:50%; }
+  .section-label { text-align:center; font-size:.63rem; text-transform:uppercase; letter-spacing:2px; color:#6b7280; margin-bottom:8px; }
+</style>
+</head>
+<body>
+
+<h1>⚡ Fluxo Completo da Plataforma</h1>
+<p class="subtitle">10 canais de entrada · Webhooks dedicados · Agente IA · KB + BD do Cliente · DevOps</p>
+
+<div class="flow">
+
+  <!-- ── CANAIS ── -->
+  <div style="width:100%">
+    <div class="section-label">Canais de Entrada</div>
+    <div class="channels">
+
+      <!-- JIRA -->
+      <div class="ch ch-jira">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#0052CC"/>
+          <path d="M14.02 4L8 10.18l2.96 3.04L14.02 10l3.06 3.22L20 10.18 14.02 4z" fill="#2684FF"/>
+          <path d="M14.02 14.78L11.06 11.8 8 14.98l6.02 6.02 6-6.02-3.06-3.18-2.94 2.98z" fill="white"/>
+        </svg>
+        <span class="lbl">Jira</span>
+      </div>
+
+      <!-- AZURE DEVOPS -->
+      <div class="ch ch-devops">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#0078D7"/>
+          <path d="M5 18.5V10l5.5-5.5 4 3v-3l8 5.5-2.5 2V18l-5.5 1.5-4-3.5v3L5 18.5z" fill="white"/>
+        </svg>
+        <span class="lbl">Azure DevOps</span>
+      </div>
+
+      <!-- DESK MANAGER -->
+      <div class="ch ch-desk">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#0f766e"/>
+          <text x="14" y="19" text-anchor="middle" font-size="11" font-weight="bold" fill="white" font-family="Segoe UI,sans-serif">DM</text>
+        </svg>
+        <span class="lbl">Desk Manager</span>
+      </div>
+
+      <!-- GITHUB -->
+      <div class="ch ch-github">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#24292e"/>
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M14 5C9.03 5 5 9.13 5 14.22c0 4.07 2.58 7.52 6.16 8.74.45.08.62-.2.62-.44v-1.55c-2.5.56-3.03-1.24-3.03-1.24-.41-1.07-1-1.36-1-1.36-.82-.58.06-.57.06-.57.9.07 1.38.95 1.38.95.8 1.41 2.1 1 2.61.77.08-.6.31-1 .57-1.23-2-.23-4.1-1.03-4.1-4.58 0-1.01.35-1.84.93-2.49-.09-.23-.4-1.18.09-2.45 0 0 .76-.25 2.5.96A8.53 8.53 0 0114 9.7c.77 0 1.55.11 2.28.32 1.73-1.21 2.49-.96 2.49-.96.49 1.27.18 2.22.09 2.45.58.65.93 1.48.93 2.49 0 3.56-2.1 4.35-4.11 4.57.32.29.61.85.61 1.71v2.53c0 .24.16.53.62.44C20.43 21.74 23 18.29 23 14.22 23 9.13 18.97 5 14 5z" fill="white"/>
+        </svg>
+        <span class="lbl">GitHub</span>
+      </div>
+
+      <!-- SLACK -->
+      <div class="ch ch-slack">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#1a1a1a"/>
+          <path d="M9.5 16.5a1.5 1.5 0 01-1.5 1.5 1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5H9.5v1.5z" fill="#E01E5A"/>
+          <path d="M10.25 16.5a1.5 1.5 0 011.5-1.5 1.5 1.5 0 011.5 1.5v3.75a1.5 1.5 0 01-1.5 1.5 1.5 1.5 0 01-1.5-1.5V16.5z" fill="#E01E5A"/>
+          <path d="M11.75 9.5a1.5 1.5 0 01-1.5-1.5A1.5 1.5 0 0111.75 6.5a1.5 1.5 0 011.5 1.5V9.5h-1.5z" fill="#36C5F0"/>
+          <path d="M11.75 10.25a1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5H8a1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5h3.75z" fill="#36C5F0"/>
+          <path d="M18.5 11.75a1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5 1.5 1.5 0 01-1.5-1.5v-1.5h1.5z" fill="#2EB67D"/>
+          <path d="M17.75 11.75a1.5 1.5 0 01-1.5 1.5 1.5 1.5 0 01-1.5-1.5V8a1.5 1.5 0 011.5-1.5 1.5 1.5 0 011.5 1.5v3.75z" fill="#2EB67D"/>
+          <path d="M16.25 18.5a1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5 1.5 1.5 0 01-1.5-1.5V18.5h1.5z" fill="#ECB22E"/>
+          <path d="M16.25 17.75a1.5 1.5 0 01-1.5-1.5 1.5 1.5 0 011.5-1.5H20a1.5 1.5 0 011.5 1.5 1.5 1.5 0 01-1.5 1.5h-3.75z" fill="#ECB22E"/>
+        </svg>
+        <span class="lbl">Slack</span>
+      </div>
+
+      <!-- TEAMS -->
+      <div class="ch ch-teams">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#6264A7"/>
+          <path d="M17.5 11h3a1 1 0 011 1v4.5a2 2 0 01-2 2h-.5v-1.5H20V12h-2.5V11z" fill="white" opacity=".8"/>
+          <circle cx="19.5" cy="9.5" r="1.5" fill="white" opacity=".8"/>
+          <rect x="8" y="13" width="9" height="7" rx="2" fill="white"/>
+          <circle cx="12.5" cy="10.5" r="2.5" fill="white"/>
+        </svg>
+        <span class="lbl">Teams</span>
+      </div>
+
+      <!-- WHATSAPP -->
+      <div class="ch ch-wa">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#25D366"/>
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M14 5.5C9.31 5.5 5.5 9.31 5.5 14c0 1.48.39 2.87 1.07 4.08L5.5 22.5l4.55-1.05A8.46 8.46 0 0014 22.5c4.69 0 8.5-3.81 8.5-8.5S18.69 5.5 14 5.5zm-3.56 5.11c.17 0 .35.01.5.02.2.01.38.04.55.43.2.47.63 1.56.69 1.67.06.11.1.24.02.38-.08.14-.12.22-.23.34-.12.13-.24.28-.35.38-.11.11-.23.23-.1.45.13.23.59 1 1.27 1.62.87.8 1.61 1.05 1.84 1.17.22.11.35.09.48-.05.13-.15.56-.66.71-.89.15-.22.3-.18.5-.11.21.07 1.32.63 1.54.74.23.12.38.18.44.27.06.1.06.55-.14 1.09-.2.53-1.17 1.03-1.6 1.07-.43.04-.84.19-2.84-.61-2.38-.95-3.88-3.38-4-3.54-.12-.15-.97-1.32-.97-2.52 0-1.2.61-1.78.83-2.02.22-.24.48-.3.64-.3z" fill="white"/>
+        </svg>
+        <span class="lbl">WhatsApp</span>
+      </div>
+
+      <!-- TELEGRAM -->
+      <div class="ch ch-tg">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#26A5E4"/>
+          <path d="M6.5 13.8l3.9 1.5 1.5 4.9c.1.3.5.4.7.2l2.2-1.8 4.2 3.1c.3.2.7.1.8-.3l3-12.5c.1-.5-.3-.9-.8-.7L6.2 12.9c-.5.2-.5.7.3.9z" fill="white"/>
+          <path d="M10.4 15.3l.5 3.3 1.4-2.7-1.9-.6z" fill="#C8DAEA"/>
+        </svg>
+        <span class="lbl">Telegram</span>
+      </div>
+
+      <!-- GMAIL -->
+      <div class="ch ch-gmail">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="white"/>
+          <path d="M5 9.5v11h4v-8l5 4 5-4v8h4v-11l-9 7-9-7z" fill="#EA4335"/>
+          <path d="M5 9.5l9 7 9-7H5z" fill="#FBBC05"/>
+          <path d="M5 9.5h18" stroke="#34A853" stroke-width=".5"/>
+          <path d="M9 9.5v11H5v-11" fill="#C5221F"/>
+          <path d="M19 9.5v11h4v-11" fill="#1A73E8"/>
+        </svg>
+        <span class="lbl">Gmail</span>
+      </div>
+
+      <!-- OUTLOOK -->
+      <div class="ch ch-outlook">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#0078D4"/>
+          <rect x="14" y="7" width="9" height="14" rx="1.5" fill="#50D9FF" opacity=".9"/>
+          <path d="M14 11h9v2h-9z" fill="#0078D4" opacity=".4"/>
+          <path d="M14 14h9v1.5h-9z" fill="#0078D4" opacity=".4"/>
+          <rect x="5" y="10" width="10" height="10" rx="2" fill="white"/>
+          <ellipse cx="10" cy="15" rx="2.5" ry="2.8" fill="#0078D4"/>
+        </svg>
+        <span class="lbl">Outlook</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="aline"></div><div class="ahead"></div>
+    <div class="alabel">POST webhook dedicado por canal · tempo real</div>
+  </div>
+
+  <!-- ── RECEPTOR ── -->
+  <div class="node purple">
+    <div class="nt">🔗 10 Endpoints Dedicados + Normalizador</div>
+    <div class="ns">Cada canal tem seu próprio endpoint e validação de segurança · Parser específico extrai os dados · Todos produzem o mesmo objeto <strong>Demanda</strong></div>
+    <div class="tags">
+      <span class="tag">/api/demandas/{canal}/{cliente_id}</span>
+      <span class="tag">HMAC-SHA256</span>
+      <span class="tag">Slack Signing Secret</span>
+      <span class="tag">Meta Signature</span>
+      <span class="tag">JWT Google</span>
+      <span class="tag">Graph Token</span>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="aline"></div><div class="ahead"></div>
+    <div class="alabel">Demanda normalizada</div>
+  </div>
+
+  <!-- ── CLASSIFICADOR ── -->
+  <div class="node purple">
+    <div class="nt">🧠 Classificador (LLM)</div>
+    <div class="ns">Determina tipo ITIL · Calcula prioridade P1–P4 · Extrai palavras-chave · Identifica entidades (usuário, sistema, erro)</div>
+    <div class="tags">
+      <span class="tag">Incidente</span>
+      <span class="tag">Requisição</span>
+      <span class="tag">Problema</span>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="aline"></div><div class="ahead"></div>
+    <div class="alabel">busca em paralelo</div>
+  </div>
+
+  <!-- ── FONTES DUPLAS ── -->
+  <div class="sources">
+    <div class="src">
+      <div class="node teal">
+        <div class="nt">📚 Base de Conhecimento (KB)</div>
+        <div class="ns">Busca híbrida vetorial + BM25 · Retorna runbooks e soluções validadas com score de confiança</div>
+        <div class="tags">
+          <span class="tag">pgvector</span>
+          <span class="tag">embeddings</span>
+          <span class="tag">"como resolver?"</span>
+        </div>
+      </div>
+    </div>
+    <div class="src">
+      <div class="node yellow">
+        <div class="nt">🗄️ Banco de Dados do Cliente</div>
+        <div class="ns">Consulta dados reais em tempo real · Usuários, configs, status de sistemas · Independente da KB</div>
+        <div class="tags">
+          <span class="tag">schema isolado</span>
+          <span class="tag">CDC / sync</span>
+          <span class="tag">"o que está acontecendo?"</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="aline"></div><div class="ahead"></div>
+    <div class="alabel">KB + dados reais combinados</div>
+  </div>
+
+  <!-- ── DECISÃO ── -->
+  <div class="node purple" style="border-style:dashed;">
+    <div class="nt">⚖️ Agente de IA — Decisão</div>
+    <div class="ns">Confiança ≥ 0.75 → Resolve autonomamente &nbsp;·&nbsp; Confiança &lt; 0.75 → Escala para DevOps</div>
+  </div>
+
+  <!-- ── FORK ── -->
+  <div class="fork">
+    <div class="fb">
+      <div class="arrow" style="margin:0"><div class="aline" style="height:16px"></div><div class="ahead"></div></div>
+      <span class="flabel fyes">✅ Resolve</span>
+      <div class="arrow" style="margin:0"><div class="aline" style="height:8px"></div><div class="ahead"></div></div>
+      <div class="node green" style="width:100%">
+        <div class="nt">🤖 Execução Autônoma</div>
+        <div class="ns">Aplica runbook da KB · ou · Executa operação no BD do cliente (ex: desbloqueia usuário, reseta senha)</div>
+        <div class="tags">
+          <span class="tag">tool calling</span>
+          <span class="tag">KB runbook</span>
+          <span class="tag">BD: UPDATE/SELECT</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="fb">
+      <div class="arrow" style="margin:0"><div class="aline" style="height:16px"></div><div class="ahead"></div></div>
+      <span class="flabel fno">🔺 Escala</span>
+      <div class="arrow" style="margin:0"><div class="aline" style="height:8px"></div><div class="ahead"></div></div>
+      <div class="node orange" style="width:100%">
+        <div class="nt">📦 Pacote Enriquecido</div>
+        <div class="ns">Briefing técnico · O que já tentou · Dados do BD consultados · Histórico similar · Hipóteses de causa</div>
+        <div class="tags">
+          <span class="tag">contexto completo</span>
+          <span class="tag">dados reais do cliente</span>
+        </div>
+      </div>
+      <div class="arrow" style="margin:4px 0"><div class="aline" style="height:16px"></div><div class="ahead"></div></div>
+      <div class="node red" style="width:100%">
+        <div class="nt">👨‍💻 Time de DevOps</div>
+        <div class="ns">Recebe no Slack/Teams/Painel · Assume · Resolve a causa raiz · Documenta a solução</div>
+        <div class="tags">
+          <span class="tag">Slack</span>
+          <span class="tag">Teams</span>
+          <span class="tag">Painel</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow" style="margin-top:14px">
+    <div class="aline" style="height:26px"></div><div class="ahead"></div>
+    <div class="alabel">responde no canal de origem</div>
+  </div>
+
+  <!-- ── RESPOSTA ── -->
+  <div class="node blue">
+    <div class="nt">↩️ Resposta via API — Canal de Origem</div>
+    <div class="ns">Cada canal recebe a resposta pela sua própria API — o mesmo caminho pelo qual a demanda entrou · Status atualizado · Loop fechado</div>
+    <div class="tags" style="margin-top:10px;">
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <img src="https://cdn.simpleicons.org/jira/0052CC" style="width:11px;height:11px;"> Jira REST API → /comment + /transitions
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <img src="https://cdn.simpleicons.org/azuredevops/0078D7" style="width:11px;height:11px;"> Azure DevOps API → PATCH work item
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <svg width="11" height="11" viewBox="0 0 28 28"><rect width="28" height="28" rx="4" fill="#0f766e"/><text x="14" y="19" text-anchor="middle" font-size="11" font-weight="bold" fill="white" font-family="sans-serif">DM</text></svg> Desk Manager API → /tickets/{id}/resposta
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <img src="https://cdn.simpleicons.org/github/ffffff" style="width:11px;height:11px;"> GitHub API → /issues/{n}/comments
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <img src="https://cdn.simpleicons.org/slack/E01E5A" style="width:11px;height:11px;"> Slack API → chat.postMessage no thread
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <img src="https://cdn.simpleicons.org/microsoftteams/6264A7" style="width:11px;height:11px;"> Teams API → reply na conversa original
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <img src="https://cdn.simpleicons.org/whatsapp/25D366" style="width:11px;height:11px;"> WhatsApp Business API → POST /messages
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <img src="https://cdn.simpleicons.org/telegram/26A5E4" style="width:11px;height:11px;"> Telegram Bot API → sendMessage (reply)
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <svg width="11" height="11" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="4" fill="white"/><path d="M5 9.5v11h4v-8l5 4 5-4v8h4v-11l-9 7-9-7z" fill="#EA4335"/><path d="M5 9.5l9 7 9-7H5z" fill="#FBBC05"/><path d="M9 9.5v11H5v-11" fill="#C5221F"/><path d="M19 9.5v11h4v-11" fill="#1A73E8"/></svg> Gmail → SMTP reply (In-Reply-To)
+      </span>
+      <span class="tag" style="display:flex;align-items:center;gap:4px;">
+        <img src="https://cdn.simpleicons.org/microsoftoutlook/0078D4" style="width:11px;height:11px;"> Microsoft Graph API → createReply
+      </span>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="aline"></div><div class="ahead"></div>
+    <div class="alabel">retroalimenta</div>
+  </div>
+
+  <!-- ── KB ATUALIZADA ── -->
+  <div class="node teal">
+    <div class="nt">📚 KB + BD Atualizados — Aprendizado Contínuo</div>
+    <div class="ns">Solução entra na KB · Dados do BD reconciliados · Agente fica mais preciso · Próxima demanda similar: resolvida mais rápido</div>
+    <div class="tags">
+      <span class="tag">+1 runbook validado</span>
+      <span class="tag">confiança aumenta</span>
+      <span class="tag">KB viva</span>
+      <span class="tag">BD sincronizado</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <div class="li"><div class="dot" style="background:#3b82f6"></div> Canais externos (10)</div>
+  <div class="li"><div class="dot" style="background:#8b5cf6"></div> Plataforma / Agente IA</div>
+  <div class="li"><div class="dot" style="background:#22c55e"></div> Resolução autônoma</div>
+  <div class="li"><div class="dot" style="background:#f97316"></div> Escalonamento DevOps</div>
+  <div class="li"><div class="dot" style="background:#14b8a6"></div> Base de Conhecimento</div>
+  <div class="li"><div class="dot" style="background:#fbbf24"></div> BD do Cliente</div>
+</div>
+
+</body>
+</html>
